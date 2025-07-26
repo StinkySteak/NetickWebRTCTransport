@@ -1,10 +1,9 @@
-using Netick;
 using StinkySteak.Timer;
 using System;
 using Unity.WebRTC;
 using UnityEngine;
 
-namespace StinkySteak.N2D
+namespace Netick.Transport.WebRTC
 {
     public class WebRTCPeer
     {
@@ -20,29 +19,39 @@ namespace StinkySteak.N2D
         private RTCSetSessionDescriptionAsyncOperation _opSetLocalDesc;
         private RTCSetSessionDescriptionAsyncOperation _opSetRemoteDesc;
 
-        private float _iceCandidateGatheringDuration = 1f;
         private FlexTimer _timerIceCandidateGathering;
+        private FlexTimer _timerTimeout;
+
+        private UserRTCConfig _userRTCConfig;
 
         private string _toJoinCode;
         private int _offerererConnectionId;
 
+        private bool _gatherIceCandidates;
+
         public event Action OnSendChannelOpen;
         public event Action OnSendChannelClosed;
+        public event Action<WebRTCPeer, byte[]> OnMessageReceived;
 
         public WebRTCEndPoint EndPoint => _endPoint;
         public bool IsConnectionOpen => _dataChannel != null && _dataChannel.ReadyState == RTCDataChannelState.Open;
+        public bool IsTimedOut => _timerTimeout.IsExpired();
 
-        public void Init(NetickEngine engine, SignalingWebClient signalingWebClient)
+        internal void Init(NetickEngine engine, SignalingWebClient signalingWebClient, UserRTCConfig userRTCConfig)
         {
             _engine = engine;
             _signalingWebClient = signalingWebClient;
+            _userRTCConfig = userRTCConfig;
+            _timerTimeout = FlexTimer.CreateFromSeconds(_userRTCConfig.RTCTimeoutDuration);
+
             _signalingWebClient.OnMessageAnswer += OnMessageAnswer;
         }
 
-        public void CloseConnection()
+        internal void CloseConnection()
         {
             _peerConnection?.Close();
             _dataChannel?.Close();
+            _timerTimeout = FlexTimer.None;
         }
 
         private void OnMessageAnswer(SignalingMessageAnswer message)
@@ -54,19 +63,24 @@ namespace StinkySteak.N2D
             _opSetRemoteDesc = _peerConnection.SetRemoteDescription(ref sdp);
         }
 
-        public void SetToJoinCode(string toJoinCode)
+        internal void SetToJoinCode(string toJoinCode)
         {
             _toJoinCode = toJoinCode;
         }
 
-        public void SetFromOfferConnectionId(int fromConnectionId)
+        internal void SetFromOfferConnectionId(int fromConnectionId)
         {
             _offerererConnectionId = fromConnectionId;
         }
 
-        public void StartFromOffer(RTCSessionDescription sdp)
+        internal void StartFromOffer(RTCSessionDescription sdp)
         {
-            _peerConnection = new RTCPeerConnection();
+            RTCConfiguration configuration = new RTCConfiguration()
+            {
+                iceServers = _userRTCConfig.IceServers
+            };
+
+            _peerConnection = new RTCPeerConnection(ref configuration);
             _peerConnection.OnDataChannel = OnDataChannelCreated;
             _peerConnection.OnIceCandidate = OnIceCandidate;
             _peerConnection.OnIceConnectionChange = OnIceConnectionChanged;
@@ -77,7 +91,7 @@ namespace StinkySteak.N2D
             Debug.Log($"[{nameof(WebRTCPeer)}]: Applying offer as remote description...");
         }
 
-        public void Send(IntPtr ptr, int length)
+        internal void Send(IntPtr ptr, int length)
         {
             _dataChannel.Send(ptr, length);
         }
@@ -108,16 +122,20 @@ namespace StinkySteak.N2D
             Debug.Log($"[{nameof(WebRTCPeer)}]: On Data channel created!");
         }
 
-        public event Action<WebRTCPeer, byte[]> OnMessageReceived;
 
         private void OnDataChannelMessage(byte[] bytes)
         {
             OnMessageReceived?.Invoke(this, bytes);
         }
 
-        public void StartAndOffer()
+        internal void StartAndOffer()
         {
-            _peerConnection = new RTCPeerConnection();
+            RTCConfiguration configuration = new RTCConfiguration()
+            {
+                iceServers = _userRTCConfig.IceServers
+            };
+
+            _peerConnection = new RTCPeerConnection(ref configuration);
             _peerConnection.OnIceCandidate = OnIceCandidate;
             _peerConnection.OnIceConnectionChange = OnIceConnectionChanged;
             _peerConnection.OnConnectionStateChange = OnConnectionStateChanged;
@@ -139,14 +157,17 @@ namespace StinkySteak.N2D
             _endPoint.Init(ip, port);
 
             Debug.Log($"[{nameof(WebRTCPeer)}]: On Data channel open!");
+
+            _timerTimeout = FlexTimer.None;
         }
 
         private void OnDataChannelClose()
         {
             Debug.Log($"[{nameof(WebRTCPeer)}]: On Data channel closed!");
+            _timerTimeout = FlexTimer.None;
         }
 
-        public void PollUpdate()
+        internal void PollUpdate()
         {
             if (_engine.IsServer)
             {
@@ -171,14 +192,22 @@ namespace StinkySteak.N2D
                 if (_opSetLocalDesc != null && _opSetLocalDesc.IsDone)
                 {
                     _opSetLocalDesc = null;
-                    Debug.Log($"[{nameof(WebRTCPeer)}]: Gathering ice candidates...");
+                    Debug.Log($"[{nameof(WebRTCPeer)}]: Answer has been applied as local description. Gathering ice candidates...");
+                    _gatherIceCandidates = true;
 
-                    _timerIceCandidateGathering = FlexTimer.CreateFromSeconds(_iceCandidateGatheringDuration);
+                    if (!_userRTCConfig.IceCandidateGatheringConfig.WaitGatheringToComplete)
+                        _timerIceCandidateGathering = FlexTimer.CreateFromSeconds(_userRTCConfig.IceCandidateGatheringConfig.GatherDuration);
                 }
 
-                if (_timerIceCandidateGathering.IsExpired())
+                if (!_gatherIceCandidates)
+                {
+                    return;
+                }
+
+                if (_timerIceCandidateGathering.IsExpired() || _peerConnection.IceConnectionState == RTCIceConnectionState.Completed)
                 {
                     _timerIceCandidateGathering = FlexTimer.None;
+                    _gatherIceCandidates = false;
 
                     SignalingMessageAnswer message = new SignalingMessageAnswer();
                     message.Type = SignalingMessageType.Answer;
@@ -206,8 +235,10 @@ namespace StinkySteak.N2D
                 {
                     _opSetLocalDesc = null;
 
-                    _timerIceCandidateGathering = FlexTimer.CreateFromSeconds(_iceCandidateGatheringDuration);
+                    if (!_userRTCConfig.IceCandidateGatheringConfig.WaitGatheringToComplete)
+                        _timerIceCandidateGathering = FlexTimer.CreateFromSeconds(_userRTCConfig.IceCandidateGatheringConfig.GatherDuration);
 
+                    _gatherIceCandidates = true;
                     Debug.Log($"[{nameof(WebRTCPeer)}]: Applying offer done. gathering candidates...");
                 }
 
@@ -218,9 +249,16 @@ namespace StinkySteak.N2D
                     _opSetRemoteDesc = null;
                 }
 
-                if (_timerIceCandidateGathering.IsExpired())
+                if (!_gatherIceCandidates)
+                {
+                    return;
+                }
+
+                if (_timerIceCandidateGathering.IsExpired() || _peerConnection.IceConnectionState == RTCIceConnectionState.Completed)
                 {
                     Debug.Log($"[{nameof(WebRTCPeer)}]: Gathering candidates done");
+
+                    _gatherIceCandidates = false;
 
                     _timerIceCandidateGathering = FlexTimer.None;
 

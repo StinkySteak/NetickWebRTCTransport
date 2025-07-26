@@ -1,15 +1,15 @@
-namespace StinkySteak.N2D
+namespace Netick.Transport.WebRTC
 {
-    public static class Log
+    internal static class Log
     {
-        private static bool _enabled;
+        private static bool _enabled = true;
 
         public static void Enable(bool enable)
         {
             _enabled = enable;
         }
 
-        public static void Debug(object message)
+        public static void Info(object message)
         {
             if (_enabled)
                 UnityEngine.Debug.Log(message);

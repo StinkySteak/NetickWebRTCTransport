@@ -1,9 +1,8 @@
 using Newtonsoft.Json;
 using System.Text;
 using Unity.WebRTC;
-using UnityEngine;
 
-namespace StinkySteak.N2D
+namespace Netick.Transport.WebRTC
 {
     [System.Serializable]
     public struct SignalingServerConnectConfig
@@ -11,15 +10,16 @@ namespace StinkySteak.N2D
         public string Address;
         public int Port;
         public bool ConnectSecurely;
-    }
 
+        public bool ShutdownOnDisconnect;
+    }
 
     public struct SignalingServerListenConfig
     {
         public int Port;
     }
 
-    public class SignalingMessage
+    internal class SignalingMessage
     {
         public SignalingMessageType Type;
 
@@ -32,33 +32,30 @@ namespace StinkySteak.N2D
         }
     }
 
-    public class SignalingMessageRequestAllocation : SignalingMessage
+    internal class SignalingMessageRequestAllocation : SignalingMessage
     {
     }
-
-    public class SignalingMessageJoinCodeAllocated : SignalingMessage
+    internal class SignalingMessageJoinCodeAllocated : SignalingMessage
     {
         public string JoinCode;
     }
-
-    public class SignalingMessagePing : SignalingMessage
+    internal class SignalingMessagePing : SignalingMessage
     {
     }
 
-    public class SignalingMessageAnswer : SignalingMessage
+    internal class SignalingMessageAnswer : SignalingMessage
     {
         public RTCSessionDescription Answer;
         public int ToConnectionId;
     }
 
-    public class SignalingMessageOffer : SignalingMessage
+    internal class SignalingMessageOffer : SignalingMessage
     {
         public RTCSessionDescription Offer;
         public string ToJoinCode;
         public int FromConnectionId;
     }
-
-    public enum SignalingMessageType
+    internal enum SignalingMessageType
     {
         RequestAllocation,
         JoinCodeAllocated,

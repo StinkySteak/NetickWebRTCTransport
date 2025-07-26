@@ -1,21 +1,20 @@
-using System;
 using Unity.WebRTC;
 using UnityEngine;
 
-namespace StinkySteak.N2D
+namespace Netick.Transport.WebRTC
 {
     [System.Serializable]
     public struct UserRTCConfig
     {
         public RTCIceServer[] IceServers;
-        public float TimeoutDuration;
+        public float RTCTimeoutDuration;
         public IceCandidateGatheringConfig IceCandidateGatheringConfig;
     }
 
     [System.Serializable]
     public struct IceCandidateGatheringConfig
     {
-        [Tooltip("WebRTC can takes some time to gather all of the candidates. Leave empty if you want to don't want to wait until finished")]
+        [Tooltip("WebRTC can takes some time to gather all of the candidates. Leave empty if you want to gather candidates in a fixed time instead (Recommended: False)")]
         public bool WaitGatheringToComplete;
 
         [Tooltip("This parameter is only valid if the WaitGatheringToComplete is disabled")]

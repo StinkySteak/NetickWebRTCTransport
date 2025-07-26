@@ -1,12 +1,11 @@
 using System;
-using UnityEngine;
 
-namespace StinkySteak.N2D
+namespace Netick.Transport.WebRTC
 {
-    public interface IWebRTCNetEventListener
+    internal interface IWebRTCNetEventListener
     {
         void OnPeerConnected(WebRTCPeer peer);
-        void OnPeerDisconnected(WebRTCPeer peer);
+        void OnPeerDisconnected(WebRTCPeer peer, DisconnectReason reason);
         void OnNetworkReceive(WebRTCPeer peer, byte[] bytes);
         void OnMessageReceiveUnmanaged(WebRTCPeer peer, IntPtr ptr, int length);
     }

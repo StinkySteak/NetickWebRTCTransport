@@ -12,7 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7b81b3165dd3c2441979d6944924b640, type: 3}
   m_Name: WebRTCTransportProvider
   m_EditorClassIdentifier: 
+  RTCConfig:
+    IceServers: []
+    TimeoutDuration: 3
+    IceCandidateGatheringConfig:
+      WaitGatheringToComplete: 0
+      GatherDuration: 0.5
   SignalingServerConfig:
     Address: localhost
     Port: 9090
     ConnectSecurely: 0
+    ShutdownOnDisconnect: 1

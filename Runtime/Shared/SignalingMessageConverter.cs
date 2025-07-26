@@ -2,9 +2,9 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 
-namespace StinkySteak.N2D
+namespace Netick.Transport.WebRTC
 {
-    public class SignalingMessageConverter : JsonConverter
+    internal class SignalingMessageConverter : JsonConverter
     {
         public override bool CanConvert(Type objectType)
         {

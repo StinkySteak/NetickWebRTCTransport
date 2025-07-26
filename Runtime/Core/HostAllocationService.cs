@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace StinkySteak.N2D
+namespace Netick.Transport.WebRTC
 {
     public class HostAllocationService
     {
@@ -16,8 +16,10 @@ namespace StinkySteak.N2D
 
         public string AllocatedJoinCode => _allocatedJoinCode;
         public event Action OnJoinCodeUpdated;
+        public event Action OnDisconnectedFromSignalingServer;
+        public event Action OnTimeoutFromSignalingServer;
 
-        public void Init(SignalingWebClient signalingWebClient, SignalingServerConnectConfig signalingServerConnectConfig)
+        internal void Init(SignalingWebClient signalingWebClient, SignalingServerConnectConfig signalingServerConnectConfig)
         {
             _signalingWebClient = signalingWebClient;
             _signalingServerConnectConfig = signalingServerConnectConfig;
@@ -28,8 +30,16 @@ namespace StinkySteak.N2D
             _signalingWebClient.Connect(_signalingServerConnectConfig);
 
             _signalingWebClient.OnConnected += OnWebClientConnected;
+            _signalingWebClient.OnTimeout += OnWebClientTimeout;
             _signalingWebClient.OnDisconnected += OnWebClientDisconnected;
             _signalingWebClient.OnMessageJoinCodeAllocated += OnWebClientMessageJoinCodeAllocated;
+        }
+
+        private void OnWebClientTimeout()
+        {
+            Log.Info($"[{nameof(HostAllocationService)}]: Timeout from signaling server");
+
+            OnTimeoutFromSignalingServer?.Invoke();
         }
 
         public void PollUpdate()
@@ -60,7 +70,7 @@ namespace StinkySteak.N2D
 
         private void OnWebClientConnected()
         {
-            Log.Debug($"[{nameof(HostAllocationService)}] Sending allocation request...");
+            Log.Info($"[{nameof(HostAllocationService)}]: Sending allocation request...");
 
             SendRequestAllocation();
         }
@@ -75,7 +85,7 @@ namespace StinkySteak.N2D
 
         private void OnWebClientMessageJoinCodeAllocated(SignalingMessageJoinCodeAllocated message)
         {
-            Log.Debug($"[{nameof(HostAllocationService)}] JoinCode allocated: {message.JoinCode}");
+            Log.Info($"[{nameof(HostAllocationService)}]: JoinCode allocated: {message.JoinCode}");
             _allocatedJoinCode = message.JoinCode;
             _isJoinCodeAllocated = true;
 
@@ -84,7 +94,9 @@ namespace StinkySteak.N2D
 
         private void OnWebClientDisconnected()
         {
+            Log.Info($"[{nameof(HostAllocationService)}]: Disconnected from signaling server");
 
+            OnDisconnectedFromSignalingServer?.Invoke();
         }
     }
 }

@@ -1,6 +1,4 @@
-using Netick;
-
-namespace StinkySteak.N2D
+namespace Netick.Transport.WebRTC
 {
     public class WebRTCEndPoint : IEndPoint
     {

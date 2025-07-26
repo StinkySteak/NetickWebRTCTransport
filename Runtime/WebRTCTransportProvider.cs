@@ -1,16 +1,31 @@
-using Netick;
+using Netick.Transport.WebRTC;
 using Netick.Unity;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace StinkySteak.N2D
+namespace Netick.Transport
 {
     [CreateAssetMenu(fileName = nameof(WebRTCTransportProvider), menuName = "Netick/Transport/WebRTCTransportProvider")]
     public class WebRTCTransportProvider : NetworkTransportProvider
     {
         public UserRTCConfig RTCConfig;
         public SignalingServerConnectConfig SignalingServerConfig;
+
+        private void Reset()
+        {
+            RTCConfig.IceServers = new global::Unity.WebRTC.RTCIceServer[1];
+            RTCConfig.IceServers[0] = new global::Unity.WebRTC.RTCIceServer()
+            {
+                urls = new string[] { "stun:stun.l.google.com:19302" },
+            };
+
+            RTCConfig.IceCandidateGatheringConfig = new IceCandidateGatheringConfig()
+            {
+                GatherDuration = 0.5f,
+                WaitGatheringToComplete = false,
+            };
+        }
 
         public override NetworkTransport MakeTransportInstance()
         {
@@ -103,19 +118,28 @@ namespace StinkySteak.N2D
             NetworkPeer.OnConnected(connection);
         }
 
-        void IWebRTCNetEventListener.OnPeerDisconnected(WebRTCPeer peer)
+        void IWebRTCNetEventListener.OnPeerDisconnected(WebRTCPeer peer, DisconnectReason disconnectReason)
         {
             Debug.Log($"IsServer: {Engine.IsServer} OnPeerDisconnected: {peer.EndPoint}");
 
             if (Engine.IsClient)
             {
-                NetworkPeer.OnConnectFailed(ConnectionFailedReason.Timeout);
-                return;
+                if (disconnectReason == DisconnectReason.SignalingServerUnreachable || disconnectReason == DisconnectReason.Timeout)
+                {
+                    NetworkPeer.OnConnectFailed(ConnectionFailedReason.Timeout);
+                    return;
+                }
+
+                if (disconnectReason == DisconnectReason.ConnectionRejected)
+                {
+                    NetworkPeer.OnConnectFailed(ConnectionFailedReason.Refused);
+                    return;
+                }
             }
 
             if (_connections.TryGetValue(peer, out var connection))
             {
-                //TransportDisconnectReason reason = disconnectReason == DisconnectReason.Timeout ? TransportDisconnectReason.Timeout : TransportDisconnectReason.Shutdown;
+                TransportDisconnectReason reason = disconnectReason == DisconnectReason.Timeout ? TransportDisconnectReason.Timeout : TransportDisconnectReason.Shutdown;
 
                 NetworkPeer.OnDisconnected(connection, TransportDisconnectReason.Shutdown);
 

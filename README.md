@@ -1,15 +1,15 @@
 ## Overview
 
-Utilizing WebRTC as a transport for Netick. Allowing Developers to Utilize DTLS (Secure UDP) for WebGL and Native platform!
+Utilizing WebRTC as a transport for Netick. Allowing Developers to STUN and TURN (Relay)
 
 If you are new to WebRTC, check out the resources section down below
 
 ## Variants
 - [WebRTC Embdedded Transport](https://github.com/StinkySteak/NetickWebRTCEmbeddedTransport) is a variant of webRTC transport that has signaling server embedded, recommended for dedicated server games. 
 
-### Features
+### Target Platform
 
-| Feature        | Description                                  | Status       |
+| Target Platform        | Description                                  | Status       |
 |----------------|----------------------------------------------|--------------|
 | Native Support | Based on the Unity WebRTC supported platform | Experimental |
 | WebGL Support  | WebGL acting as a client                     | Not yet supported |
@@ -37,18 +37,31 @@ https://github.com/NetickNetworking/NetickForUnity
 - Enter https://github.com/StinkySteak/NetickWebRTCTransport.git
 - You can then create an instance by double clicking in the Assets folder and going to `Create > Netick > Transport > NetickWebRTCTransport`
 
-### How to Use?
+## Accessing Join code
+You can attach this script to the NetworkSandbox and let view component access the join code to there.
+```cs
+public class JoinCodeSandbox : NetickBehaviour
+{
+    public string JoinCode;
+    private WebRTCTransport _transport;
 
-| API                    | Description                                                                                            |
-|------------------------|--------------------------------------------------------------------------------------------------------|
-| Timeout Duration | Define how long timeout will be called upon failed to connect |
-| ICE Servers            | URLs of your STUN/TURN servers                                                                         |
+    public override void NetworkStart()
+    {
+        if (Object.IsServer)
+        {
+            _transport = Sandbox.Transport as WebRTCTransport;
+            _transport.HostAllocationService.OnJoinCodeUpdated += UpdateJoinCode;
 
-### HTTPS/WSS Support
-Enable `ConnectSecurely` on the transport then, do one of these:
+            UpdateJoinCode();
+        }
+    }
 
-1. [Through Reverse Proxy (Recommended)](https://caddyserver.com/docs/quick-starts/reverse-proxy)
-2. [Through SSL Certificate](https://github.com/StinkySteak/SimpleWebTransport/blob/master/HowToCreateSSLCert.md)
+    private void UpdateJoinCode()
+    {
+        JoinCode = _transport.HostAllocationService.AllocatedJoinCode;
+    }
+}
+```
 
 ### Resources to learn WebRTC
 - [Simple WebRTC Introduction](https://www.youtube.com/watch?v=8I2axE6j204)

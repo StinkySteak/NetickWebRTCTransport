@@ -3,15 +3,15 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Text;
-using UnityEngine;
 
-namespace StinkySteak.N2D
+namespace Netick.Transport.WebRTC
 {
-    public class SignalingWebClient
+    internal class SignalingWebClient
     {
         private SimpleWebClient _webClient;
 
         public event Action OnConnected;
+        public event Action OnTimeout;
         public event Action OnDisconnected;
         public event Action<Exception> OnError;
         public event Action<SignalingMessageRequestAllocation> OnMessageRequestAllocation;
@@ -19,6 +19,8 @@ namespace StinkySteak.N2D
         public event Action<SignalingMessagePing> OnMessagePing;
         public event Action<SignalingMessageAnswer> OnMessageAnswer;
         public event Action<SignalingMessageOffer> OnMessageOffer;
+
+        private bool _isConnectedOnce;
 
         public void Connect(SignalingServerConnectConfig connectConfig)
         {
@@ -53,11 +55,19 @@ namespace StinkySteak.N2D
 
         private void OnWebClientConnected()
         {
+            _isConnectedOnce = true;
+
             OnConnected?.Invoke();
         }
         private void OnWebClientDisconnect()
         {
-            OnDisconnected?.Invoke();
+            if (_isConnectedOnce)
+            {
+                OnDisconnected?.Invoke();
+                return;
+            }
+
+            OnTimeout?.Invoke();
         }
 
         public void Send(byte[] bytes)
@@ -75,7 +85,7 @@ namespace StinkySteak.N2D
             };
 
             SignalingMessage message = JsonConvert.DeserializeObject<SignalingMessage>(json, settings);
-            Debug.Log($"[{nameof(SignalingWebClient)}]: Message received type: {message.Type}");
+            Log.Info($"[{nameof(SignalingWebClient)}]: Message received type: {message.Type}");
 
             switch (message)
             {
@@ -99,6 +109,7 @@ namespace StinkySteak.N2D
 
         private void OnWebClientError(Exception exception)
         {
+            UnityEngine.Debug.Log($"OnWebClientError: {exception}");
             OnError?.Invoke(exception);
         }
     }

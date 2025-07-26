@@ -5,22 +5,12 @@ using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
 
-namespace StinkySteak.N2D
+namespace Netick.Transport.WebRTC
 {
     public class SignalingServer
     {
         private SimpleWebServer _webServer;
-        private const string JoinCodePool = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-        private const int JoinCodeLength = 5;
-
-        public struct Session
-        {
-            public string JoinCode;
-            public int OwnerConnectionId;
-            public DateTime LastHeartbeatTime;
-        }
-
-        private List<Session> _sessions = new();
+        private AllocationService _allocationService;
 
         public void Start(ushort port)
         {
@@ -34,7 +24,9 @@ namespace StinkySteak.N2D
 
             _webServer.Start(port);
 
-            Log.Debug($"[{nameof(SignalingServer)}]: Signaling server is listening at: {port}");
+            Log.Info($"[{nameof(SignalingServer)}]: Signaling server is listening at: {port}");
+
+            _allocationService = new AllocationService();
         }
 
         public void Stop()
@@ -63,7 +55,7 @@ namespace StinkySteak.N2D
 
             SignalingMessage message = JsonConvert.DeserializeObject<SignalingMessage>(json, settings);
 
-            Log.Debug($"[{nameof(SignalingServer)}]: Received: {message.Type}");
+            Log.Info($"[{nameof(SignalingServer)}]: Message received: {message.Type}");
 
             switch (message)
             {
@@ -87,12 +79,9 @@ namespace StinkySteak.N2D
 
         private void OnMessagePing(int connectionId, SignalingMessagePing message)
         {
-            if (TryGetSession(connectionId, out Session session, out int index))
+            if (_allocationService.TryGetSession(connectionId, out Session session, out int index))
             {
-                Session updatedSession = session;
-                updatedSession.LastHeartbeatTime = DateTime.UtcNow;
-
-                _sessions[index] = session;
+                _allocationService.SetSessionHeartbeat(index);
 
                 SignalingMessagePing messageReply = new();
                 messageReply.Type = SignalingMessageType.Ping;
@@ -101,117 +90,40 @@ namespace StinkySteak.N2D
                 return;
             }
 
-            Log.Debug($"[{nameof(SignalingServer)}]: Ping from remote is not found");
+            Log.Info($"[{nameof(SignalingServer)}]: Session ping failed to be found from: {connectionId}");
         }
 
-        private bool TryGetSession(int ownerConnectionId, out Session expectedSession, out int index)
-        {
-            for (int i = 0; i < _sessions.Count; i++)
-            {
-                Session session = _sessions[i];
-
-                if (session.OwnerConnectionId == ownerConnectionId)
-                {
-                    expectedSession = session;
-                    index = i;
-                    return true;
-                }
-            }
-
-            index = -1;
-            expectedSession = default;
-            return false;
-        }
-
-        private bool TryGetSession(string joinCode, out Session expectedSession, out int index)
-        {
-            for (int i = 0; i < _sessions.Count; i++)
-            {
-                Session session = _sessions[i];
-
-                if (session.JoinCode == joinCode)
-                {
-                    expectedSession = session;
-                    index = i;
-                    return true;
-                }
-            }
-
-            index = -1;
-            expectedSession = default;
-            return false;
-        }
 
         private void OnMessageRequestAllocation(int fromConnectionId, SignalingMessageRequestAllocation message)
         {
-            if (!TryGenerateJoinCode(out string joinCode))
+            if (!_allocationService.TryAllocateSession(fromConnectionId, out Session allocatedSession))
             {
                 return;
             }
 
             SignalingMessageJoinCodeAllocated messageReply = new SignalingMessageJoinCodeAllocated();
             messageReply.Type = SignalingMessageType.JoinCodeAllocated;
-            messageReply.JoinCode = joinCode;
+            messageReply.JoinCode = allocatedSession.JoinCode;
 
             string json = JsonConvert.SerializeObject(messageReply);
             byte[] bytes = Encoding.ASCII.GetBytes(json);
 
-            Session session = new Session()
-            {
-                JoinCode = joinCode,
-                OwnerConnectionId = fromConnectionId,
-                LastHeartbeatTime = DateTime.UtcNow,
-            };
-
-            _sessions.Add(session);
-
-            Log.Debug($"[{nameof(SignalingServer)}]: Session allocated: {joinCode}");
+            Log.Info($"[{nameof(SignalingServer)}]: Session allocated: {allocatedSession.JoinCode}");
 
             _webServer.SendOne(fromConnectionId, bytes);
         }
 
-        private bool TryGenerateJoinCode(out string freeJoinCode)
-        {
-            char[] joinCode = new char[JoinCodeLength];
-
-            for (int i = 0; i < JoinCodeLength; i++)
-            {
-                int randomIndexFromPool = UnityEngine.Random.Range(0, JoinCodePool.Length);
-
-                char randomChar = JoinCodePool[randomIndexFromPool];
-
-                joinCode[i] = randomChar;
-            }
-
-            string joinCodeStr = new(joinCode);
-
-            for (int i = 0; i < _sessions.Count; i++)
-            {
-                var session = _sessions[i];
-
-                bool isDuplicate = session.JoinCode == joinCodeStr;
-
-                if (isDuplicate)
-                {
-                    freeJoinCode = string.Empty;
-                    return false;
-                }
-            }
-
-            freeJoinCode = joinCodeStr;
-            return true;
-        }
 
         private void OnMessageAnswer(int fromConnectionId, SignalingMessageAnswer message)
         {
-            Log.Debug($"Forwarding answer to: {message.ToConnectionId}");
+            Log.Info($"Forwarding answer to: {message.ToConnectionId}");
 
             _webServer.SendOne(message.ToConnectionId, message.ToBytes());
         }
 
         private void OnMessageOffer(int fromConnectionId, SignalingMessageOffer message)
         {
-            if (!TryGetSession(message.ToJoinCode, out Session session, out int index))
+            if (!_allocationService.TryGetSession(message.ToJoinCode, out Session session, out int index))
             {
                 Debug.LogWarning($"join code not found: {message.ToJoinCode}");
                 return;
@@ -225,15 +137,15 @@ namespace StinkySteak.N2D
 
         private void OnRemoteClientDisconnected(int connectionId)
         {
-            //if (TryRemoveSession(connectionId, out Session expectedSession))
-            //{
-            //    Debug.Log($"[{nameof(SignalingServer)}]: Removed session: {expectedSession.JoinCode}, host was disconnected");
-            //}
+            if (_allocationService.TryRemoveSession(connectionId, out Session expectedSession))
+            {
+                Log.Info($"[{nameof(SignalingServer)}]: Removed session: {expectedSession.JoinCode}, host was disconnected");
+            }
         }
 
         private void OnRemoteClientConnected(int connectionId)
         {
-            Log.Debug($"[{nameof(SignalingServer)}]: a client has connected!");
+            Log.Info($"[{nameof(SignalingServer)}]: a client has connected!");
         }
     }
 }

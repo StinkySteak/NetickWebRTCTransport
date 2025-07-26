@@ -1,8 +1,9 @@
 using Netick;
 using System.Collections.Generic;
+using System.Net.Sockets;
 using Unity.WebRTC;
 
-namespace StinkySteak.N2D
+namespace Netick.Transport.WebRTC
 {
     public class WebRTCNetManager
     {
@@ -24,7 +25,7 @@ namespace StinkySteak.N2D
 
         public HostAllocationService HostAllocationService => _hostAllocationService;
 
-        public void Init(NetickEngine engine, IWebRTCNetEventListener listener, SignalingServerConnectConfig signalingServerConnectConfig, UserRTCConfig userRTCConfig)
+        internal void Init(NetickEngine engine, IWebRTCNetEventListener listener, SignalingServerConnectConfig signalingServerConnectConfig, UserRTCConfig userRTCConfig)
         {
             _engine = engine;
             _listener = listener;
@@ -59,22 +60,25 @@ namespace StinkySteak.N2D
 
         public void Stop()
         {
-            for (int i = 0; i < _activePeers.Count; i++)
+            if (_engine.IsServer)
             {
-                WebRTCPeer client = _activePeers[i];
+                for (int i = 0; i < _activePeers.Count; i++)
+                {
+                    WebRTCPeer client = _activePeers[i];
 
-                client.CloseConnection();
+                    client.CloseConnection();
+                }
+
+                for (int i = 0; i < _candidatePeers.Count; i++)
+                {
+                    WebRTCPeer client = _candidatePeers[i];
+
+                    client.CloseConnection();
+                }
+
+                _activePeers.Clear();
+                _candidatePeers.Clear();
             }
-
-            for (int i = 0; i < _candidatePeers.Count; i++)
-            {
-                WebRTCPeer client = _candidatePeers[i];
-
-                client.CloseConnection();
-            }
-
-            _activePeers.Clear();
-            _candidatePeers.Clear();
 
             _signalingWebClient.Stop();
         }
@@ -84,13 +88,13 @@ namespace StinkySteak.N2D
             RTCSessionDescription sdp = message.Offer;
 
             WebRTCPeer candidatePeer = new WebRTCPeer();
-            candidatePeer.Init(_engine, _signalingWebClient);
+            candidatePeer.Init(_engine, _signalingWebClient, _userRTCConfig);
             candidatePeer.SetFromOfferConnectionId(message.FromConnectionId);
             candidatePeer.StartFromOffer(sdp);
 
             _candidatePeers.Add(candidatePeer);
 
-            Log.Debug($"[{nameof(WebRTCNetManager)}]: Received offering from client");
+            Log.Info($"[{nameof(WebRTCNetManager)}]: Received offering from client");
         }
 
         public void PollUpdate()
@@ -126,7 +130,7 @@ namespace StinkySteak.N2D
 
                         peer.OnMessageReceived -= OnMessageReceived;
 
-                        _listener.OnPeerDisconnected(peer);
+                        _listener.OnPeerDisconnected(peer, DisconnectReason.ConnectionClosed);
                     }
                 }
             }
@@ -146,6 +150,13 @@ namespace StinkySteak.N2D
 
                         _serverConnectionCandidate = null;
                     }
+
+                    if (_serverConnectionCandidate.IsTimedOut)
+                    {
+                        _listener.OnPeerDisconnected(_serverConnectionCandidate, DisconnectReason.Timeout);
+                        _serverConnectionCandidate.CloseConnection();
+                        return;
+                    }
                 }
 
                 if (_serverConnection != null)
@@ -156,7 +167,7 @@ namespace StinkySteak.N2D
                     {
                         _serverConnection = null;
 
-                        _listener.OnPeerDisconnected(_serverConnection);
+                        _listener.OnPeerDisconnected(_serverConnection, DisconnectReason.ConnectionClosed);
                     }
                 }
             }
@@ -172,11 +183,11 @@ namespace StinkySteak.N2D
         private void OnWebClientAsClientConnected()
         {
             _serverConnectionCandidate = new WebRTCPeer();
-            _serverConnectionCandidate.Init(_engine, _signalingWebClient);
+            _serverConnectionCandidate.Init(_engine, _signalingWebClient, _userRTCConfig);
             _serverConnectionCandidate.SetToJoinCode(_joinCodeAllocation);
             _serverConnectionCandidate.StartAndOffer();
 
-            Log.Debug($"[{nameof(WebRTCNetManager)}]: Start and Offering");
+            Log.Info($"[{nameof(WebRTCNetManager)}]: Start and offering...");
         }
 
         public void Connect(string joinCode)
@@ -184,10 +195,17 @@ namespace StinkySteak.N2D
             _joinCodeAllocation = joinCode;
 
             _signalingWebClient.OnConnected += OnWebClientAsClientConnected;
+            _signalingWebClient.OnTimeout += OnWebClientTimeout;
 
             _signalingWebClient.Connect(_signalingServerConnectConfig);
 
-            Log.Debug($"[{nameof(WebRTCNetManager)}]: Connecting to {_signalingServerConnectConfig.Address}:{_signalingServerConnectConfig.Port}");
+            Log.Info($"[{nameof(WebRTCNetManager)}]: Connecting to {_signalingServerConnectConfig.Address}:{_signalingServerConnectConfig.Port}");
+        }
+
+        private void OnWebClientTimeout()
+        {
+            UnityEngine.Debug.Log("Error");
+            _listener.OnPeerDisconnected(null, DisconnectReason.SignalingServerUnreachable);
         }
     }
 }

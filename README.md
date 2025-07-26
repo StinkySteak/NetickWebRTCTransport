@@ -51,9 +51,16 @@ public class JoinCodeSandbox : NetickBehaviour
         {
             _transport = Sandbox.Transport as WebRTCTransport;
             _transport.HostAllocationService.OnJoinCodeUpdated += UpdateJoinCode;
+            _transport.HostAllocationService.OnTimeoutFromSignalingServer += OnTimeoutSignalingServer;
 
             UpdateJoinCode();
         }
+    }
+
+    private void OnTimeoutSignalingServer()
+    {
+        UnityEngine.Debug.LogError("Failed to register to signaling server");
+        // Show UI Error in-game
     }
 
     private void UpdateJoinCode()
@@ -61,6 +68,7 @@ public class JoinCodeSandbox : NetickBehaviour
         JoinCode = _transport.HostAllocationService.AllocatedJoinCode;
     }
 }
+
 ```
 
 ### Resources to learn WebRTC

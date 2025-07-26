@@ -40,6 +40,9 @@ https://github.com/NetickNetworking/NetickForUnity
 ## Accessing Join code
 You can attach this script to the NetworkSandbox and let view component access the join code to there.
 ```cs
+using Netick.Transport;
+using Netick.Unity;
+
 public class JoinCodeSandbox : NetickBehaviour
 {
     public string JoinCode;
@@ -51,13 +54,14 @@ public class JoinCodeSandbox : NetickBehaviour
         {
             _transport = Sandbox.Transport as WebRTCTransport;
             _transport.HostAllocationService.OnJoinCodeUpdated += UpdateJoinCode;
-            _transport.HostAllocationService.OnTimeoutFromSignalingServer += OnTimeoutSignalingServer;
+            _transport.HostAllocationService.OnTimeoutFromSignalingServer += OnDisconnectedFromSignalingServer;
+            _transport.HostAllocationService.OnDisconnectedFromSignalingServer += OnDisconnectedFromSignalingServer;
 
             UpdateJoinCode();
         }
     }
 
-    private void OnTimeoutSignalingServer()
+    private void OnDisconnectedFromSignalingServer()
     {
         UnityEngine.Debug.LogError("Failed to register to signaling server");
         // Show UI Error in-game
@@ -68,6 +72,7 @@ public class JoinCodeSandbox : NetickBehaviour
         JoinCode = _transport.HostAllocationService.AllocatedJoinCode;
     }
 }
+
 
 ```
 

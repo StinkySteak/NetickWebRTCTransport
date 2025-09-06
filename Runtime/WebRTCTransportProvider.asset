@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   RTCConfig:
     IceServers: []
-    TimeoutDuration: 3
+    RTCTimeoutDuration: 3
     IceCandidateGatheringConfig:
       WaitGatheringToComplete: 0
       GatherDuration: 0.5

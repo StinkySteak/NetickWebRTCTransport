@@ -14,6 +14,11 @@ namespace Netick.Transport
 
         private void Reset()
         {
+            RTCConfig = new UserRTCConfig()
+            {
+                RTCTimeoutDuration = 3
+            };
+
             RTCConfig.IceServers = new global::Unity.WebRTC.RTCIceServer[1];
             RTCConfig.IceServers[0] = new global::Unity.WebRTC.RTCIceServer()
             {

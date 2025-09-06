@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace Netick.Transport.WebRTC
 {
-    public class WebRTCPeer
+    public class NativeWebRTCPeer : BaseWebRTCPeer
     {
         private NetickEngine _engine;
         private SignalingWebClient _signalingWebClient;
@@ -32,13 +32,12 @@ namespace Netick.Transport.WebRTC
 
         public event Action OnSendChannelOpen;
         public event Action OnSendChannelClosed;
-        public event Action<WebRTCPeer, byte[]> OnMessageReceived;
 
-        public WebRTCEndPoint EndPoint => _endPoint;
-        public bool IsConnectionOpen => _dataChannel != null && _dataChannel.ReadyState == RTCDataChannelState.Open;
-        public bool IsTimedOut => _timerTimeout.IsExpired();
+        public override IEndPoint EndPoint => _endPoint;
+        public override bool IsConnectionOpen => _dataChannel != null && _dataChannel.ReadyState == RTCDataChannelState.Open;
+        public override bool IsTimedOut => _timerTimeout.IsExpired();
 
-        internal void Init(NetickEngine engine, SignalingWebClient signalingWebClient, UserRTCConfig userRTCConfig)
+        internal override void Init(NetickEngine engine, SignalingWebClient signalingWebClient, UserRTCConfig userRTCConfig)
         {
             _engine = engine;
             _signalingWebClient = signalingWebClient;
@@ -48,7 +47,7 @@ namespace Netick.Transport.WebRTC
             _signalingWebClient.OnMessageAnswer += OnMessageAnswer;
         }
 
-        internal void CloseConnection()
+        public override void CloseConnection()
         {
             _peerConnection?.Close();
             _dataChannel?.Close();
@@ -57,24 +56,24 @@ namespace Netick.Transport.WebRTC
 
         private void OnMessageAnswer(SignalingMessageAnswer message)
         {
-            Debug.Log($"[{nameof(WebRTCPeer)}]: Applying answer as remote description...");
+            Debug.Log($"[{nameof(NativeWebRTCPeer)}]: Applying answer as remote description...");
 
             RTCSessionDescription sdp = JsonConvert.DeserializeObject<RTCSessionDescription>(message.Answer);
 
             _opSetRemoteDesc = _peerConnection.SetRemoteDescription(ref sdp);
         }
 
-        internal void SetToJoinCode(string toJoinCode)
+        public override void SetToJoinCode(string toJoinCode)
         {
             _toJoinCode = toJoinCode;
         }
 
-        internal void SetFromOfferConnectionId(int fromConnectionId)
+        public override void SetFromOfferConnectionId(int fromConnectionId)
         {
             _offerererConnectionId = fromConnectionId;
         }
 
-        internal void StartFromOffer(RTCSessionDescription sdp)
+        public override void StartFromOffer(RTCSessionDescription sdp)
         {
             RTCConfiguration configuration = new RTCConfiguration()
             {
@@ -89,27 +88,22 @@ namespace Netick.Transport.WebRTC
 
             _opSetRemoteDesc = _peerConnection.SetRemoteDescription(ref sdp);
 
-            Debug.Log($"[{nameof(WebRTCPeer)}]: Applying offer as remote description...");
-        }
-
-        internal void Send(IntPtr ptr, int length)
-        {
-            _dataChannel.Send(ptr, length);
+            Debug.Log($"[{nameof(NativeWebRTCPeer)}]: Applying offer as remote description...");
         }
 
         private void OnConnectionStateChanged(RTCPeerConnectionState connectionState)
         {
-            Debug.Log($"[{nameof(WebRTCPeer)}]: connectionState changed: {connectionState}");
+            Debug.Log($"[{nameof(NativeWebRTCPeer)}]: connectionState changed: {connectionState}");
         }
 
         private void OnIceConnectionChanged(RTCIceConnectionState iceConnectionState)
         {
-            Debug.Log($"[{nameof(WebRTCPeer)}]: iceConnection changed: {iceConnectionState}");
+            Debug.Log($"[{nameof(NativeWebRTCPeer)}]: iceConnection changed: {iceConnectionState}");
         }
 
         private void OnIceCandidate(RTCIceCandidate iceCandidate)
         {
-            Debug.Log($"[{nameof(WebRTCPeer)}]: on Ice Candidate: {iceCandidate.Candidate}");
+            Debug.Log($"[{nameof(NativeWebRTCPeer)}]: on Ice Candidate: {iceCandidate.Candidate}");
         }
 
         private void OnDataChannelCreated(RTCDataChannel dataChannel)
@@ -120,16 +114,16 @@ namespace Netick.Transport.WebRTC
             _dataChannel.OnClose = OnDataChannelClose;
             _dataChannel.OnMessage = OnDataChannelMessage;
 
-            Debug.Log($"[{nameof(WebRTCPeer)}]: On Data channel created!");
+            Debug.Log($"[{nameof(NativeWebRTCPeer)}]: On Data channel created!");
         }
 
 
         private void OnDataChannelMessage(byte[] bytes)
         {
-            OnMessageReceived?.Invoke(this, bytes);
+            BroadcastOnMessage(bytes);
         }
 
-        internal void StartAndOffer()
+        public override void StartAndOffer()
         {
             RTCConfiguration configuration = new RTCConfiguration()
             {
@@ -148,7 +142,7 @@ namespace Netick.Transport.WebRTC
 
             _opCreateOffer = _peerConnection.CreateOffer();
 
-            Debug.Log($"[{nameof(WebRTCPeer)}]: Creating offer...");
+            Debug.Log($"[{nameof(NativeWebRTCPeer)}]: Creating offer...");
         }
 
         private void OnDataChannelOpen()
@@ -157,18 +151,18 @@ namespace Netick.Transport.WebRTC
 
             _endPoint.Init(ip, port);
 
-            Debug.Log($"[{nameof(WebRTCPeer)}]: On Data channel open!");
+            Debug.Log($"[{nameof(NativeWebRTCPeer)}]: On Data channel open!");
 
             _timerTimeout = FlexTimer.None;
         }
 
         private void OnDataChannelClose()
         {
-            Debug.Log($"[{nameof(WebRTCPeer)}]: On Data channel closed!");
+            Debug.Log($"[{nameof(NativeWebRTCPeer)}]: On Data channel closed!");
             _timerTimeout = FlexTimer.None;
         }
 
-        internal void PollUpdate()
+        public override void PollUpdate()
         {
             if (_engine.IsServer)
             {
@@ -178,14 +172,14 @@ namespace Netick.Transport.WebRTC
 
                     _opCreateAnswer = _peerConnection.CreateAnswer();
 
-                    Debug.Log($"[{nameof(WebRTCPeer)}]: Creating answer...");
+                    Debug.Log($"[{nameof(NativeWebRTCPeer)}]: Creating answer...");
                 }
 
                 if (_opCreateAnswer != null && _opCreateAnswer.IsDone)
                 {
                     RTCSessionDescription sdp = _opCreateAnswer.Desc;
                     _opCreateAnswer = null;
-                    Debug.Log($"[{nameof(WebRTCPeer)}]: Answer created. applying as local description....");
+                    Debug.Log($"[{nameof(NativeWebRTCPeer)}]: Answer created. applying as local description....");
 
                     _opSetLocalDesc = _peerConnection.SetLocalDescription(ref sdp);
                 }
@@ -193,7 +187,7 @@ namespace Netick.Transport.WebRTC
                 if (_opSetLocalDesc != null && _opSetLocalDesc.IsDone)
                 {
                     _opSetLocalDesc = null;
-                    Debug.Log($"[{nameof(WebRTCPeer)}]: Answer has been applied as local description. Gathering ice candidates...");
+                    Debug.Log($"[{nameof(NativeWebRTCPeer)}]: Answer has been applied as local description. Gathering ice candidates...");
                     _gatherIceCandidates = true;
 
                     if (!_userRTCConfig.IceCandidateGatheringConfig.WaitGatheringToComplete)
@@ -214,7 +208,7 @@ namespace Netick.Transport.WebRTC
                     message.Type = SignalingMessageType.Answer;
                     message.Answer = JsonConvert.SerializeObject(_peerConnection.LocalDescription);
                     message.ToConnectionId = _offerererConnectionId;
-                    Debug.Log($"[{nameof(WebRTCPeer)}]: Sending answer to remote");
+                    Debug.Log($"[{nameof(NativeWebRTCPeer)}]: Sending answer to remote");
 
                     _signalingWebClient.Send(message.ToBytes());
                 }
@@ -229,7 +223,7 @@ namespace Netick.Transport.WebRTC
 
                     _opSetLocalDesc = _peerConnection.SetLocalDescription(ref sdp);
 
-                    Debug.Log($"[{nameof(WebRTCPeer)}]: Applying offer as local description");
+                    Debug.Log($"[{nameof(NativeWebRTCPeer)}]: Applying offer as local description");
                 }
 
                 if (_opSetLocalDesc != null && _opSetLocalDesc.IsDone)
@@ -240,12 +234,12 @@ namespace Netick.Transport.WebRTC
                         _timerIceCandidateGathering = FlexTimer.CreateFromSeconds(_userRTCConfig.IceCandidateGatheringConfig.GatherDuration);
 
                     _gatherIceCandidates = true;
-                    Debug.Log($"[{nameof(WebRTCPeer)}]: Applying offer done. gathering candidates...");
+                    Debug.Log($"[{nameof(NativeWebRTCPeer)}]: Applying offer done. gathering candidates...");
                 }
 
                 if (_opSetRemoteDesc != null && _opSetRemoteDesc.IsDone)
                 {
-                    Debug.Log($"[{nameof(WebRTCPeer)}]: Applying answer done. gathering candidates...");
+                    Debug.Log($"[{nameof(NativeWebRTCPeer)}]: Applying answer done. gathering candidates...");
 
                     _opSetRemoteDesc = null;
                 }
@@ -257,7 +251,7 @@ namespace Netick.Transport.WebRTC
 
                 if (_timerIceCandidateGathering.IsExpired() || _peerConnection.IceConnectionState == RTCIceConnectionState.Completed)
                 {
-                    Debug.Log($"[{nameof(WebRTCPeer)}]: Gathering candidates done");
+                    Debug.Log($"[{nameof(NativeWebRTCPeer)}]: Gathering candidates done");
 
                     _gatherIceCandidates = false;
 
@@ -268,11 +262,36 @@ namespace Netick.Transport.WebRTC
                     message.Offer = JsonConvert.SerializeObject(_peerConnection.LocalDescription);
                     message.ToJoinCode = _toJoinCode;
 
-                    Debug.Log($"[{nameof(WebRTCPeer)}]:Sending offer to: {_toJoinCode}");
+                    Debug.Log($"[{nameof(NativeWebRTCPeer)}]:Sending offer to: {_toJoinCode}");
 
                     _signalingWebClient.Send(message.ToBytes());
                 }
             }
+        }
+
+        public override void Send(IntPtr ptr, int length, bool isReliable)
+        {
+            _dataChannel.Send(ptr, length);
+        }
+
+        public override void Connect(string address, int port)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void Start(RunMode runMode)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void OnReceivedOfferFromClient(string offer)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void SetConnectionId(int id)
+        {
+            throw new NotImplementedException();
         }
     }
 }

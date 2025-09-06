@@ -4,9 +4,9 @@ namespace Netick.Transport.WebRTC
 {
     internal interface IWebRTCNetEventListener
     {
-        void OnPeerConnected(WebRTCPeer peer);
-        void OnPeerDisconnected(WebRTCPeer peer, DisconnectReason reason);
-        void OnNetworkReceive(WebRTCPeer peer, byte[] bytes);
-        void OnMessageReceiveUnmanaged(WebRTCPeer peer, IntPtr ptr, int length);
+        void OnPeerConnected(BaseWebRTCPeer peer);
+        void OnPeerDisconnected(BaseWebRTCPeer peer, DisconnectReason reason);
+        void OnNetworkReceive(BaseWebRTCPeer peer, byte[] bytes);
+        void OnMessageReceiveUnmanaged(BaseWebRTCPeer peer, IntPtr ptr, int length);
     }
 }

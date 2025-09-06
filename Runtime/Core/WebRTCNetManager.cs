@@ -1,8 +1,7 @@
-using Netick;
 using Newtonsoft.Json;
 using System.Collections.Generic;
-using System.Net.Sockets;
 using Unity.WebRTC;
+using UnityEngine;
 
 namespace Netick.Transport.WebRTC
 {
@@ -17,11 +16,11 @@ namespace Netick.Transport.WebRTC
 
         private string _joinCodeAllocation;
 
-        private List<WebRTCPeer> _candidatePeers;
-        private List<WebRTCPeer> _activePeers;
+        private List<BaseWebRTCPeer> _candidatePeers;
+        private List<BaseWebRTCPeer> _activePeers;
 
-        private WebRTCPeer _serverConnection;
-        private WebRTCPeer _serverConnectionCandidate;
+        private BaseWebRTCPeer _serverConnection;
+        private BaseWebRTCPeer _serverConnectionCandidate;
         private HostAllocationService _hostAllocationService;
 
         public HostAllocationService HostAllocationService => _hostAllocationService;
@@ -45,7 +44,7 @@ namespace Netick.Transport.WebRTC
             }
         }
 
-        public void DisconnectPeer(WebRTCPeer peer)
+        public void DisconnectPeer(BaseWebRTCPeer peer)
         {
             peer.CloseConnection();
         }
@@ -65,14 +64,14 @@ namespace Netick.Transport.WebRTC
             {
                 for (int i = 0; i < _activePeers.Count; i++)
                 {
-                    WebRTCPeer client = _activePeers[i];
+                    BaseWebRTCPeer client = _activePeers[i];
 
                     client.CloseConnection();
                 }
 
                 for (int i = 0; i < _candidatePeers.Count; i++)
                 {
-                    WebRTCPeer client = _candidatePeers[i];
+                    BaseWebRTCPeer client = _candidatePeers[i];
 
                     client.CloseConnection();
                 }
@@ -88,7 +87,7 @@ namespace Netick.Transport.WebRTC
         {
             RTCSessionDescription sdp = JsonConvert.DeserializeObject<RTCSessionDescription>(message.Offer);
 
-            WebRTCPeer candidatePeer = new WebRTCPeer();
+            BaseWebRTCPeer candidatePeer = ConstructWebRTCPeer();
             candidatePeer.Init(_engine, _signalingWebClient, _userRTCConfig);
             candidatePeer.SetFromOfferConnectionId(message.FromConnectionId);
             candidatePeer.StartFromOffer(sdp);
@@ -106,7 +105,7 @@ namespace Netick.Transport.WebRTC
 
                 for (int i = _candidatePeers.Count - 1; i >= 0; i--)
                 {
-                    WebRTCPeer peer = _candidatePeers[i];
+                    BaseWebRTCPeer peer = _candidatePeers[i];
                     peer.PollUpdate();
 
                     if (peer.IsConnectionOpen)
@@ -122,7 +121,7 @@ namespace Netick.Transport.WebRTC
 
                 for (int i = _activePeers.Count - 1; i >= 0; i--)
                 {
-                    WebRTCPeer peer = _activePeers[i];
+                    BaseWebRTCPeer peer = _activePeers[i];
                     peer.PollUpdate();
 
                     if (!peer.IsConnectionOpen)
@@ -176,14 +175,22 @@ namespace Netick.Transport.WebRTC
             _signalingWebClient.PollUpdate();
         }
 
-        private void OnMessageReceived(WebRTCPeer peer, byte[] bytes)
+        private void OnMessageReceived(BaseWebRTCPeer peer, byte[] bytes)
         {
             _listener.OnNetworkReceive(peer, bytes);
         }
 
+        private BaseWebRTCPeer ConstructWebRTCPeer()
+        {
+            if (Application.platform == RuntimePlatform.WebGLPlayer)
+                return new BrowserWebRTCPeer();
+
+            return new NativeWebRTCPeer();
+        }
+
         private void OnWebClientAsClientConnected()
         {
-            _serverConnectionCandidate = new WebRTCPeer();
+            _serverConnectionCandidate = ConstructWebRTCPeer();
             _serverConnectionCandidate.Init(_engine, _signalingWebClient, _userRTCConfig);
             _serverConnectionCandidate.SetToJoinCode(_joinCodeAllocation);
             _serverConnectionCandidate.StartAndOffer();

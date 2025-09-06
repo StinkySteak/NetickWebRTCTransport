@@ -43,7 +43,7 @@ namespace Netick.Transport
 
     public class WebRTCConnection : TransportConnection
     {
-        public WebRTCPeer Peer;
+        public BaseWebRTCPeer Peer;
 
         public override IEndPoint EndPoint => Peer.EndPoint;
 
@@ -51,13 +51,13 @@ namespace Netick.Transport
 
         public override void Send(IntPtr ptr, int length)
         {
-            Peer.Send(ptr, length);
+            Peer.Send(ptr, length, isReliable: false);
         }
     }
 
     public unsafe class WebRTCTransport : NetworkTransport, IWebRTCNetEventListener
     {
-        private Dictionary<WebRTCPeer, WebRTCConnection> _connections;
+        private Dictionary<BaseWebRTCPeer, WebRTCConnection> _connections;
         private Queue<WebRTCConnection> _freeClients;
 
         private BitBuffer _bitBuffer;
@@ -114,7 +114,7 @@ namespace Netick.Transport
             _netManager.Stop();
         }
 
-        void IWebRTCNetEventListener.OnPeerConnected(WebRTCPeer peer)
+        void IWebRTCNetEventListener.OnPeerConnected(BaseWebRTCPeer peer)
         {
             WebRTCConnection connection = _freeClients.Dequeue();
             connection.Peer = peer;
@@ -123,7 +123,7 @@ namespace Netick.Transport
             NetworkPeer.OnConnected(connection);
         }
 
-        void IWebRTCNetEventListener.OnPeerDisconnected(WebRTCPeer peer, DisconnectReason disconnectReason)
+        void IWebRTCNetEventListener.OnPeerDisconnected(BaseWebRTCPeer peer, DisconnectReason disconnectReason)
         {
             Debug.Log($"IsServer: {Engine.IsServer} OnPeerDisconnected: {peer.EndPoint}");
 
@@ -153,7 +153,7 @@ namespace Netick.Transport
             }
         }
 
-        void IWebRTCNetEventListener.OnNetworkReceive(WebRTCPeer peer, byte[] bytes)
+        void IWebRTCNetEventListener.OnNetworkReceive(BaseWebRTCPeer peer, byte[] bytes)
         {
             if (_connections.TryGetValue(peer, out var connection))
             {
@@ -165,7 +165,7 @@ namespace Netick.Transport
             }
         }
 
-        void IWebRTCNetEventListener.OnMessageReceiveUnmanaged(WebRTCPeer peer, IntPtr ptr, int length)
+        void IWebRTCNetEventListener.OnMessageReceiveUnmanaged(BaseWebRTCPeer peer, IntPtr ptr, int length)
         {
             if (_connections.TryGetValue(peer, out var connection))
             {

@@ -1,3 +1,4 @@
+using Newtonsoft.Json;
 using StinkySteak.Timer;
 using System;
 using Unity.WebRTC;
@@ -58,7 +59,7 @@ namespace Netick.Transport.WebRTC
         {
             Debug.Log($"[{nameof(WebRTCPeer)}]: Applying answer as remote description...");
 
-            RTCSessionDescription sdp = message.Answer;
+            RTCSessionDescription sdp = JsonConvert.DeserializeObject<RTCSessionDescription>(message.Answer);
 
             _opSetRemoteDesc = _peerConnection.SetRemoteDescription(ref sdp);
         }
@@ -211,7 +212,7 @@ namespace Netick.Transport.WebRTC
 
                     SignalingMessageAnswer message = new SignalingMessageAnswer();
                     message.Type = SignalingMessageType.Answer;
-                    message.Answer = _peerConnection.LocalDescription;
+                    message.Answer = JsonConvert.SerializeObject(_peerConnection.LocalDescription);
                     message.ToConnectionId = _offerererConnectionId;
                     Debug.Log($"[{nameof(WebRTCPeer)}]: Sending answer to remote");
 
@@ -264,7 +265,7 @@ namespace Netick.Transport.WebRTC
 
                     SignalingMessageOffer message = new SignalingMessageOffer();
                     message.Type = SignalingMessageType.Offer;
-                    message.Offer = _peerConnection.LocalDescription;
+                    message.Offer = JsonConvert.SerializeObject(_peerConnection.LocalDescription);
                     message.ToJoinCode = _toJoinCode;
 
                     Debug.Log($"[{nameof(WebRTCPeer)}]:Sending offer to: {_toJoinCode}");

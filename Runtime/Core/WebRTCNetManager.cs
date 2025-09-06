@@ -1,4 +1,5 @@
 using Netick;
+using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.Net.Sockets;
 using Unity.WebRTC;
@@ -85,7 +86,7 @@ namespace Netick.Transport.WebRTC
 
         private void OnWebClientMessageOffer(SignalingMessageOffer message)
         {
-            RTCSessionDescription sdp = message.Offer;
+            RTCSessionDescription sdp = JsonConvert.DeserializeObject<RTCSessionDescription>(message.Offer);
 
             WebRTCPeer candidatePeer = new WebRTCPeer();
             candidatePeer.Init(_engine, _signalingWebClient, _userRTCConfig);

@@ -45,13 +45,13 @@ namespace Netick.Transport.WebRTC
 
     internal class SignalingMessageAnswer : SignalingMessage
     {
-        public RTCSessionDescription Answer;
+        public string Answer;
         public int ToConnectionId;
     }
 
     internal class SignalingMessageOffer : SignalingMessage
     {
-        public RTCSessionDescription Offer;
+        public string Offer;
         public string ToJoinCode;
         public int FromConnectionId;
     }

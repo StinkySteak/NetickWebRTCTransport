@@ -141,6 +141,13 @@ namespace Netick.Transport.WebRTC
                 {
                     _serverConnectionCandidate.PollUpdate();
 
+                    if (_serverConnectionCandidate.IsTimedOut)
+                    {
+                        _listener.OnPeerDisconnected(_serverConnectionCandidate, DisconnectReason.Timeout);
+                        _serverConnectionCandidate.CloseConnection();
+                        return;
+                    }
+
                     if (_serverConnectionCandidate.IsConnectionOpen)
                     {
                         _serverConnection = _serverConnectionCandidate;
@@ -149,13 +156,6 @@ namespace Netick.Transport.WebRTC
                         _listener.OnPeerConnected(_serverConnection);
 
                         _serverConnectionCandidate = null;
-                    }
-
-                    if (_serverConnectionCandidate.IsTimedOut)
-                    {
-                        _listener.OnPeerDisconnected(_serverConnectionCandidate, DisconnectReason.Timeout);
-                        _serverConnectionCandidate.CloseConnection();
-                        return;
                     }
                 }
 

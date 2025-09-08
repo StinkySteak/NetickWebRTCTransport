@@ -1,6 +1,6 @@
-using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
-using Unity.WebRTC;
+using System.Runtime.InteropServices;
 using UnityEngine;
 
 namespace Netick.Transport.WebRTC
@@ -22,11 +22,14 @@ namespace Netick.Transport.WebRTC
         private BaseWebRTCPeer _serverConnection;
         private BaseWebRTCPeer _serverConnectionCandidate;
         private HostAllocationService _hostAllocationService;
+        private byte[] _receiveBuffer;
 
         public HostAllocationService HostAllocationService => _hostAllocationService;
 
         internal void Init(NetickEngine engine, IWebRTCNetEventListener listener, SignalingServerConnectConfig signalingServerConnectConfig, UserRTCConfig userRTCConfig)
         {
+            _receiveBuffer = new byte[2048];
+
             _engine = engine;
             _listener = listener;
             _signalingServerConnectConfig = signalingServerConnectConfig;
@@ -85,12 +88,10 @@ namespace Netick.Transport.WebRTC
 
         private void OnWebClientMessageOffer(SignalingMessageOffer message)
         {
-            RTCSessionDescription sdp = JsonConvert.DeserializeObject<RTCSessionDescription>(message.Offer);
-
             BaseWebRTCPeer candidatePeer = ConstructWebRTCPeer();
             candidatePeer.Init(_engine, _signalingWebClient, _userRTCConfig);
             candidatePeer.SetFromOfferConnectionId(message.FromConnectionId);
-            candidatePeer.StartFromOffer(sdp);
+            candidatePeer.StartFromOffer(message.Offer);
 
             _candidatePeers.Add(candidatePeer);
 
@@ -114,6 +115,7 @@ namespace Netick.Transport.WebRTC
                         _activePeers.Add(peer);
 
                         peer.OnMessageReceived += OnMessageReceived;
+                        peer.OnMessageReceivedUnmanaged += OnMessageReceivedUnmanaged;
 
                         _listener.OnPeerConnected(peer);
                     }
@@ -129,6 +131,7 @@ namespace Netick.Transport.WebRTC
                         _activePeers.RemoveAt(i);
 
                         peer.OnMessageReceived -= OnMessageReceived;
+                        peer.OnMessageReceivedUnmanaged -= OnMessageReceivedUnmanaged;
 
                         _listener.OnPeerDisconnected(peer, DisconnectReason.ConnectionClosed);
                     }
@@ -152,7 +155,9 @@ namespace Netick.Transport.WebRTC
                     {
                         _serverConnection = _serverConnectionCandidate;
                         _serverConnection.OnMessageReceived += OnMessageReceived;
+                        _serverConnection.OnMessageReceivedUnmanaged += OnMessageReceivedUnmanaged;
 
+                        _signalingWebClient.Stop();
                         _listener.OnPeerConnected(_serverConnection);
 
                         _serverConnectionCandidate = null;
@@ -175,9 +180,18 @@ namespace Netick.Transport.WebRTC
             _signalingWebClient.PollUpdate();
         }
 
+
+        private void OnMessageReceivedUnmanaged(BaseWebRTCPeer peer, System.IntPtr ptr, int length)
+        {
+            Array.Clear(_receiveBuffer, 0, _receiveBuffer.Length);
+
+            Marshal.Copy(ptr, _receiveBuffer, 0, length);
+            _listener.OnNetworkReceive(peer, _receiveBuffer, length);
+        }
+
         private void OnMessageReceived(BaseWebRTCPeer peer, byte[] bytes)
         {
-            _listener.OnNetworkReceive(peer, bytes);
+            _listener.OnNetworkReceive(peer, bytes, bytes.Length);
         }
 
         private BaseWebRTCPeer ConstructWebRTCPeer()

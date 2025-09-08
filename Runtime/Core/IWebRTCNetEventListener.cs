@@ -6,7 +6,6 @@ namespace Netick.Transport.WebRTC
     {
         void OnPeerConnected(BaseWebRTCPeer peer);
         void OnPeerDisconnected(BaseWebRTCPeer peer, DisconnectReason reason);
-        void OnNetworkReceive(BaseWebRTCPeer peer, byte[] bytes);
-        void OnMessageReceiveUnmanaged(BaseWebRTCPeer peer, IntPtr ptr, int length);
+        void OnNetworkReceive(BaseWebRTCPeer peer, byte[] bytes, int length);
     }
 }

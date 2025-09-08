@@ -1,6 +1,6 @@
 using Newtonsoft.Json;
+using StinkySteak.WebRealtimeCommunication;
 using System.Text;
-using Unity.WebRTC;
 
 namespace Netick.Transport.WebRTC
 {
@@ -26,8 +26,8 @@ namespace Netick.Transport.WebRTC
         public byte[] ToBytes()
         {
             string json = JsonConvert.SerializeObject(this);
-            byte[] bytes = Encoding.UTF8.GetBytes(json);
 
+            byte[] bytes = Encoding.UTF8.GetBytes(json);
             return bytes;
         }
     }
@@ -45,13 +45,13 @@ namespace Netick.Transport.WebRTC
 
     internal class SignalingMessageAnswer : SignalingMessage
     {
-        public string Answer;
+        public WebRTCSessionDescription Answer;
         public int ToConnectionId;
     }
 
     internal class SignalingMessageOffer : SignalingMessage
     {
-        public string Offer;
+        public WebRTCSessionDescription Offer;
         public string ToJoinCode;
         public int FromConnectionId;
     }

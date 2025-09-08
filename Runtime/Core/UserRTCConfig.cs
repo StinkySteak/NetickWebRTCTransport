@@ -1,4 +1,3 @@
-using Unity.WebRTC;
 using UnityEngine;
 
 namespace Netick.Transport.WebRTC
@@ -6,7 +5,7 @@ namespace Netick.Transport.WebRTC
     [System.Serializable]
     public struct UserRTCConfig
     {
-        public RTCIceServer[] IceServers;
+        public IceServer[] IceServers;
         public float RTCTimeoutDuration;
         public IceCandidateGatheringConfig IceCandidateGatheringConfig;
     }
@@ -19,5 +18,7 @@ namespace Netick.Transport.WebRTC
 
         [Tooltip("This parameter is only valid if the WaitGatheringToComplete is disabled")]
         public float GatherDuration;
+
+        public bool ManualGatheringStop => !WaitGatheringToComplete;
     }
 }

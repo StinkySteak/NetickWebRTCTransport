@@ -19,10 +19,10 @@ namespace Netick.Transport
                 RTCTimeoutDuration = 3
             };
 
-            RTCConfig.IceServers = new global::Unity.WebRTC.RTCIceServer[1];
-            RTCConfig.IceServers[0] = new global::Unity.WebRTC.RTCIceServer()
+            RTCConfig.IceServers = new IceServer[1];
+            RTCConfig.IceServers[0] = new IceServer()
             {
-                urls = new string[] { "stun:stun.l.google.com:19302" },
+                Urls = new string[] { "stun:stun.l.google.com:19302" },
             };
 
             RTCConfig.IceCandidateGatheringConfig = new IceCandidateGatheringConfig()
@@ -125,8 +125,6 @@ namespace Netick.Transport
 
         void IWebRTCNetEventListener.OnPeerDisconnected(BaseWebRTCPeer peer, DisconnectReason disconnectReason)
         {
-            Debug.Log($"IsServer: {Engine.IsServer} OnPeerDisconnected: {peer.EndPoint}");
-
             if (Engine.IsClient)
             {
                 if (disconnectReason == DisconnectReason.SignalingServerUnreachable || disconnectReason == DisconnectReason.Timeout)
@@ -153,24 +151,15 @@ namespace Netick.Transport
             }
         }
 
-        void IWebRTCNetEventListener.OnNetworkReceive(BaseWebRTCPeer peer, byte[] bytes)
+        void IWebRTCNetEventListener.OnNetworkReceive(BaseWebRTCPeer peer, byte[] bytes, int length)
         {
             if (_connections.TryGetValue(peer, out var connection))
             {
                 fixed (byte* ptr = bytes)
                 {
-                    _bitBuffer.SetFrom(ptr, bytes.Length, bytes.Length);
+                    _bitBuffer.SetFrom(ptr, bytes.Length, length);
                     NetworkPeer.Receive(connection, _bitBuffer);
                 }
-            }
-        }
-
-        void IWebRTCNetEventListener.OnMessageReceiveUnmanaged(BaseWebRTCPeer peer, IntPtr ptr, int length)
-        {
-            if (_connections.TryGetValue(peer, out var connection))
-            {
-                _bitBuffer.SetFrom((byte*)ptr, length, length);
-                NetworkPeer.Receive(connection, _bitBuffer);
             }
         }
     }

@@ -96,6 +96,8 @@ namespace Netick.Transport.WebRTC
                     OnMessageAnswer?.Invoke(answer);
                     break;
                 case SignalingMessageOffer offer:
+                    Log.Info($"[{nameof(SignalingWebClient)}]: json: {json}");
+                    Log.Info($"[{nameof(SignalingWebClient)}]: Offer: {offer.Offer}");
                     OnMessageOffer?.Invoke(offer);
                     break;
                 case SignalingMessageJoinCodeAllocated joinCodeAllocated:

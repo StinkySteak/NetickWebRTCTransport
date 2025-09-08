@@ -1,7 +1,6 @@
 using Netick.Transport.WebRTC;
-using StinkySteak.Timer;
+using StinkySteak.WebRealtimeCommunication;
 using System;
-using Unity.WebRTC;
 
 namespace Netick.Transport
 {
@@ -17,23 +16,13 @@ namespace Netick.Transport
         public abstract bool IsConnectionOpen { get; }
         public abstract bool IsTimedOut { get; }
 
-        //  public abstract void SetConfig(UserRTCConfig userRTCConfig, WebSocketSignalingConfig webSocketSignalingConfig);
-
         public abstract void Send(IntPtr ptr, int length, bool isReliable);
-
-        public abstract void Connect(string address, int port);
 
         public abstract void CloseConnection();
 
-        public abstract void Start(RunMode runMode);
-
         public abstract void PollUpdate();
 
-       // public abstract void SetSignalingServer(WebSocketSignalingServer signalingServer);
-
-        public abstract void OnReceivedOfferFromClient(string offer);
-
-        public abstract void SetConnectionId(int id);
+        public abstract void Start();
 
         internal abstract void Init(NetickEngine engine, SignalingWebClient signalingWebClient, UserRTCConfig userRTCConfig);
 
@@ -43,7 +32,7 @@ namespace Netick.Transport
 
         public abstract void SetFromOfferConnectionId(int fromConnectionId);
 
-        public abstract void StartFromOffer(RTCSessionDescription sdp);
+        public abstract void StartFromOffer(WebRTCSessionDescription offerJson);
 
         protected void BroadcastOnMessage(byte[] bytes)
         {

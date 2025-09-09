@@ -329,8 +329,6 @@ namespace Netick.Transport.WebRTC
                 RTCSessionDescription sdp = _opCreateOffer.Desc;
                 _opCreateOffer = null;
 
-                Debug.Log($"sdp: {sdp}\n sdp.type: {sdp.type}");
-
                 _opSetLocalDesc = _peerConnection.SetLocalDescription(ref sdp);
 
                 Debug.Log($"[{nameof(NativeWebRTCPeer)}]: Applying offer as local description");

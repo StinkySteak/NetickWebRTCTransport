@@ -96,7 +96,7 @@ namespace StinkySteak.WebRealtimeCommunication
             return offer;
         }
 
-        public static string WebRTC_GetOffer()
+        public static string WebRTC_GetOfferJson()
         {
             IntPtr ptr = WebRTC_Unsafe_GetOffer();
 
@@ -112,7 +112,7 @@ namespace StinkySteak.WebRealtimeCommunication
             return offer;
         }
 
-        public static string WebRTC_GetAnswer()
+        public static string WebRTC_GetAnswerJson()
         {
             IntPtr ptr = WebRTC_Unsafe_GetAnswer();
 
@@ -126,6 +126,42 @@ namespace StinkySteak.WebRealtimeCommunication
             Marshal.FreeHGlobal(ptr);
 
             return offer;
+        }
+
+        public static WebRTCSessionDescription WebRTC_GetOffer()
+        {
+            IntPtr ptr = WebRTC_Unsafe_GetOffer();
+
+            if (ptr == IntPtr.Zero)
+            {
+                return default;
+            }
+
+            string json = Marshal.PtrToStringAuto(ptr);
+
+            Marshal.FreeHGlobal(ptr);
+
+            WebRTCSessionDescription sdp = JsonConvert.DeserializeObject<WebRTCSessionDescription>(json);
+
+            return sdp;
+        }
+
+        public static WebRTCSessionDescription WebRTC_GetAnswer()
+        {
+            IntPtr ptr = WebRTC_Unsafe_GetAnswer();
+
+            if (ptr == IntPtr.Zero)
+            {
+                return default;
+            }
+
+            string json = Marshal.PtrToStringAuto(ptr);
+
+            Marshal.FreeHGlobal(ptr);
+
+            WebRTCSessionDescription sdp = JsonConvert.DeserializeObject<WebRTCSessionDescription>(json);
+
+            return sdp;
         }
 
         public static WebRTCSessionDescription WebRTC_GetLocalDescription()

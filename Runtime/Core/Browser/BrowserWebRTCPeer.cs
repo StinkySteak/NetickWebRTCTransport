@@ -93,9 +93,9 @@ namespace Netick.Transport
             {
                 Debug.Log("Answer is created. Setting it as local description...");
 
-                string answer = Browser.WebRTC_GetAnswer();
+                WebRTCSessionDescription answer = Browser.WebRTC_GetAnswer();
 
-                Browser.WebRTC_Unsafe_SetLocalDescription(answer);
+                Browser.WebRTC_SetLocalDescription(answer);
 
                 Browser.WebRTC_DisposeOpCreateAnswer();
             }
@@ -126,11 +126,9 @@ namespace Netick.Transport
             {
                 Debug.Log("Offer Created. Setting it to local...");
 
+                WebRTCSessionDescription offer = Browser.WebRTC_GetOffer();
 
-                string offer = Browser.WebRTC_GetOffer();
-                Debug.Log($"offer: {offer}");
-
-                Browser.WebRTC_Unsafe_SetLocalDescription(offer);
+                Browser.WebRTC_SetLocalDescription(offer);
 
                 Browser.WebRTC_DisposeOpCreateOffer();
             }
@@ -250,6 +248,8 @@ namespace Netick.Transport
 
             SDPParser.ParseSDP(remoteDescription, out string ip, out int port);
 
+            UnityEngine.Debug.Log($"remoteSDP: {remoteDescription}");
+
             _instance._timerTimeout = FlexTimer.None;
             _instance._endPoint.Init(ip, port);
         }
@@ -260,6 +260,8 @@ namespace Netick.Transport
             string remoteDescription = Browser.WebRTC_GetRemoteDescriptionJson();
 
             SDPParser.ParseSDP(remoteDescription, out string ip, out int port);
+
+            UnityEngine.Debug.Log($"remoteSDP: {remoteDescription}");
 
             _instance._endPoint.Init(ip, port);
         }

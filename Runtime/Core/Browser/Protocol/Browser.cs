@@ -301,90 +301,89 @@ namespace StinkySteak.WebRealtimeCommunication
         [DllImport("__Internal")]
         public static extern bool WebRTC_Reset(int index);
 #else
-        public static void WebRTC_Unsafe_CreateRTCPeerConnection(string configJson) { }
+        public static int WebRTC_Unsafe_CreateRTCPeerConnection(string configJson) { return 0; }
 
-        public static void WebRTC_CreateRTCPeerConnection(BrowserRTCConfiguration config)
+        public static int WebRTC_CreateRTCPeerConnection(BrowserRTCConfiguration config) { return 0; }
+
+        public static bool WebRTC_GetOpCreateOfferIsDone(int index) { return false; }
+        public static bool WebRTC_GetOpCreateAnswerIsDone(int index) { return false; }
+        public static void WebRTC_DisposeOpCreateOffer(int index) { }
+        public static void WebRTC_DisposeOpCreateAnswer(int index) { }
+        public static void WebRTC_CreateOffer(int index) { }
+        public static void WebRTC_CreateAnswer(int index) { }
+        public static bool WebRTC_HasOpCreateAnswer(int index) { return false; }
+        public static bool WebRTC_HasOpSetRemoteDescription(int index) { return false; }
+        public static bool WebRTC_IsOpSetRemoteDescriptionDone(int index) { return false; }
+        public static bool WebRTC_HasOpCreateOffer(int index) { return false; }
+        public static bool WebRTC_CloseConnection(int index) { return false; }
+        public static bool WebRTC_HasOpSetLocalDescription(int index) { return false; }
+        public static bool WebRTC_IsOpSetLocalDescriptionDone(int index) { return false; }
+        public static bool WebRTC_DisposeOpSetLocalDescription(int index) { return false; }
+        public static bool WebRTC_DisposeOpSetRemoteDescription(int index) { return false; }
+        public static IntPtr WebRTC_Unsafe_GetConnectionState(int index) { return IntPtr.Zero; }
+
+        public static BrowserRTCIceGatheringState WebRTC_GetGatheringState(int index)
         {
-            string json = JsonConvert.SerializeObject(config);
-            WebRTC_Unsafe_CreateRTCPeerConnection(json);
+            return (BrowserRTCIceGatheringState)WebRTC_Unsafe_GetGatheringState(index);
         }
 
-        public static bool WebRTC_GetOpCreateOfferIsDone() { return false; }
-        public static bool WebRTC_GetOpCreateAnswerIsDone() { return false; }
-        public static void WebRTC_DisposeOpCreateOffer() { }
-        public static void WebRTC_DisposeOpCreateAnswer() { }
-        public static void WebRTC_CreateOffer() { }
-        public static void WebRTC_CreateAnswer() { }
-        public static bool WebRTC_HasOpCreateAnswer() { return false; }
-        public static bool WebRTC_HasOpSetRemoteDescription() { return false; }
-        public static bool WebRTC_IsOpSetRemoteDescriptionDone() { return false; }
-        public static bool WebRTC_HasOpCreateOffer() { return false; }
-        public static bool WebRTC_CloseConnection() { return false; }
-        public static bool WebRTC_HasOpSetLocalDescription() { return false; }
-        public static bool WebRTC_IsOpSetLocalDescriptionDone() { return false; }
-        public static bool WebRTC_DisposeOpSetLocalDescription() { return false; }
-        public static bool WebRTC_DisposeOpSetRemoteDescription() { return false; }
-        public static IntPtr WebRTC_Unsafe_GetConnectionState() { return IntPtr.Zero; }
+        public static int WebRTC_Unsafe_GetGatheringState(int index) { return 0; }
 
-        public static BrowserRTCIceGatheringState WebRTC_GetGatheringState()
-        {
-            return (BrowserRTCIceGatheringState)WebRTC_Unsafe_GetGatheringState();
-        }
-
-        public static int WebRTC_Unsafe_GetGatheringState() { return 0; }
-
-        public static string WebRTC_GetConnectionState()
+        public static string WebRTC_GetConnectionState(int index)
         {
             return string.Empty;
         }
 
-        public static string WebRTC_GetOffer()
+        public static WebRTCSessionDescription WebRTC_GetOffer(int index)
         {
-            return string.Empty;
+            return default;
         }
 
-        public static string WebRTC_GetAnswer()
+        public static WebRTCSessionDescription WebRTC_GetAnswer(int index)
         {
-            return string.Empty;
+            return default;
         }
 
-        public static string WebRTC_GetLocalDescription()
+        public static WebRTCSessionDescription WebRTC_GetLocalDescription(int index)
         {
-            return string.Empty;
+            return default;
         }
 
-        public static string WebRTC_GetRemoteDescription()
+        public static WebRTCSessionDescription WebRTC_GetRemoteDescription(int index)
         {
-            return string.Empty;
+            return default;
         }
 
-        public static IntPtr WebRTC_Unsafe_GetOffer() { return IntPtr.Zero; }
-        public static IntPtr WebRTC_Unsafe_GetAnswer() { return IntPtr.Zero; }
-        public static void WebRTC_SetLocalDescription(string sdp) { }
-        public static void WebRTC_SetRemoteDescription(string sdp) { }
-        public static IntPtr WebRTC_Unsafe_GetLocalDescription() { return IntPtr.Zero; }
-        public static IntPtr WebRTC_Unsafe_GetRemoteDescription() { return IntPtr.Zero; }
+        public static IntPtr WebRTC_Unsafe_GetOffer(int index) { return IntPtr.Zero; }
+        public static IntPtr WebRTC_Unsafe_GetAnswer(int index) { return IntPtr.Zero; }
+        public static void WebRTC_SetLocalDescription(int index, WebRTCSessionDescription sessionDescription) { }
+        public static void WebRTC_SetRemoteDescription(int index, WebRTCSessionDescription sessionDescription) { }
+        public static IntPtr WebRTC_Unsafe_GetLocalDescription(int index) { return IntPtr.Zero; }
+        public static IntPtr WebRTC_Unsafe_GetRemoteDescription(int index) { return IntPtr.Zero; }
 
-        public static void WebRTC_CreateDataChannel(BrowserRTCDataChannelInit dataChannelConfig)
+        public static void WebRTC_CreateDataChannel(int index, BrowserRTCDataChannelInit dataChannelConfig)
         {
             string json = JsonConvert.SerializeObject(dataChannelConfig);
-            WebRTC_Unsafe_CreateDataChannel(json);
+            WebRTC_Unsafe_CreateDataChannel(index, json);
         }
 
-        public static void WebRTC_Unsafe_CreateDataChannel(string configJson) { }
-        public static void WebRTC_Unsafe_CreateDataChannelReliable() { }
-        public static bool WebRTC_IsConnectionOpen() { return false; }
-        public static void WebRTC_DataChannelSend(IntPtr ptr, int length) { }
-        public static void WebRTC_SetCallbackOnMessage(OnMessageCallback callback) { }
-        public static void WebRTC_SetCallbackOnIceConnectionStateChange(OnIceConnectionStateChange callback) { }
-        public static void WebRTC_SetCallbackOnDataChannelCreated(OnDataChannelCreated callback) { }
-        public static void WebRTC_SetCallbackOnIceCandidate(OnIceCandidate callback) { }
-        public static void WebRTC_SetCallbackOnDataChannelOpen(OnDataChannelOpen callback) { }
-        public static void WebRTC_SetCallbackOnDataChannelReliableOpen(OnDataChannelOpen callback) { }
-        public static void WebRTC_SetCallbackOnDataChanneReliablelOpen(OnDataChannelReliableOpen callback) { }
-        public static void WebRTC_SetCallbackOnIceCandidateGatheringState(OnIceCandidateGatheringState callback) { }
-        public static bool WebRTC_GetIsPeerConnectionCreated() { return false; }
-        public static bool WebRTC_Reset() { return false; }
+        public static void WebRTC_Unsafe_CreateDataChannel(int index, string configJson) { }
+        public static void WebRTC_Unsafe_CreateDataChannelReliable(int index) { }
+        public static bool WebRTC_IsConnectionOpen(int index) { return false; }
+        public static void WebRTC_DataChannelSend(int index, IntPtr ptr, int length) { }
+        public static void WebRTC_DataChannelReliableSend(int index, IntPtr ptr, int length) { }
+        public static void WebRTC_SetCallbackOnMessage(int index, OnMessageCallback callback) { }
+        public static void WebRTC_SetCallbackOnIceConnectionStateChange(int index, OnIceConnectionStateChange callback) { }
+        public static void WebRTC_SetCallbackOnDataChannelCreated(int index, OnDataChannelCreated callback) { }
+        public static void WebRTC_SetCallbackOnIceCandidate(int index, OnIceCandidate callback) { }
+        public static void WebRTC_SetCallbackOnDataChannelOpen(int index, OnDataChannelOpen callback) { }
+        public static void WebRTC_SetCallbackOnDataChannelReliableOpen(int index, OnDataChannelOpen callback) { }
+        public static void WebRTC_SetCallbackOnDataChanneReliablelOpen(int index, OnDataChannelReliableOpen callback) { }
+        public static void WebRTC_SetCallbackOnIceCandidateGatheringState(int index, OnIceCandidateGatheringState callback) { }
+        public static bool WebRTC_GetIsPeerConnectionCreated(int index) { return false; }
+        public static bool WebRTC_Reset(int index) { return false; }
+        public static void WebRTC_CreateDataChannelReliable(int index) { }
+        public static string WebRTC_GetRemoteDescriptionJson(int index) { return string.Empty; }
 
 #endif
     }

@@ -10,9 +10,9 @@ namespace StinkySteak.WebRealtimeCommunication
     {
 #if UNITY_WEBGL
         [DllImport("__Internal")]
-        public static extern void WebRTC_Unsafe_CreateRTCPeerConnection(string configJson);
+        public static extern int WebRTC_Unsafe_CreateRTCPeerConnection(string configJson);
 
-        public static void WebRTC_CreateRTCPeerConnection(BrowserRTCConfiguration config)
+        public static int WebRTC_CreateRTCPeerConnection(BrowserRTCConfiguration config)
         {
             StringEnumConverter settings = new StringEnumConverter()
             {
@@ -21,68 +21,68 @@ namespace StinkySteak.WebRealtimeCommunication
 
             string json = JsonConvert.SerializeObject(config, settings);
 
-            WebRTC_Unsafe_CreateRTCPeerConnection(json);
+            return WebRTC_Unsafe_CreateRTCPeerConnection(json);
         }
 
         [DllImport("__Internal")]
-        public static extern bool WebRTC_GetOpCreateOfferIsDone();
+        public static extern bool WebRTC_GetOpCreateOfferIsDone(int index);
 
         [DllImport("__Internal")]
-        public static extern bool WebRTC_GetOpCreateAnswerIsDone();
+        public static extern bool WebRTC_GetOpCreateAnswerIsDone(int index);
 
         [DllImport("__Internal")]
-        public static extern void WebRTC_DisposeOpCreateOffer();
+        public static extern void WebRTC_DisposeOpCreateOffer(int index);
 
         [DllImport("__Internal")]
-        public static extern void WebRTC_DisposeOpCreateAnswer();
+        public static extern void WebRTC_DisposeOpCreateAnswer(int index);
 
         [DllImport("__Internal")]
-        public static extern void WebRTC_CreateOffer();
+        public static extern void WebRTC_CreateOffer(int index);
 
         [DllImport("__Internal")]
-        public static extern void WebRTC_CreateAnswer();
+        public static extern void WebRTC_CreateAnswer(int index);
 
         [DllImport("__Internal")]
-        public static extern bool WebRTC_HasOpCreateAnswer();
+        public static extern bool WebRTC_HasOpCreateAnswer(int index);
 
         [DllImport("__Internal")]
-        public static extern bool WebRTC_HasOpSetRemoteDescription();
+        public static extern bool WebRTC_HasOpSetRemoteDescription(int index);
 
         [DllImport("__Internal")]
-        public static extern bool WebRTC_IsOpSetRemoteDescriptionDone();
+        public static extern bool WebRTC_IsOpSetRemoteDescriptionDone(int index);
 
         [DllImport("__Internal")]
-        public static extern bool WebRTC_HasOpCreateOffer();
+        public static extern bool WebRTC_HasOpCreateOffer(int index);
 
         [DllImport("__Internal")]
-        public static extern bool WebRTC_CloseConnection();
+        public static extern bool WebRTC_CloseConnection(int index);
 
         [DllImport("__Internal")]
-        public static extern bool WebRTC_HasOpSetLocalDescription();
+        public static extern bool WebRTC_HasOpSetLocalDescription(int index);
 
         [DllImport("__Internal")]
-        public static extern bool WebRTC_IsOpSetLocalDescriptionDone();
+        public static extern bool WebRTC_IsOpSetLocalDescriptionDone(int index);
 
         [DllImport("__Internal")]
-        public static extern bool WebRTC_DisposeOpSetLocalDescription();
+        public static extern bool WebRTC_DisposeOpSetLocalDescription(int index);
 
         [DllImport("__Internal")]
-        public static extern bool WebRTC_DisposeOpSetRemoteDescription();
+        public static extern bool WebRTC_DisposeOpSetRemoteDescription(int index);
 
         [DllImport("__Internal")]
-        public static extern IntPtr WebRTC_Unsafe_GetConnectionState();
+        public static extern IntPtr WebRTC_Unsafe_GetConnectionState(int index);
 
-        public static BrowserRTCIceGatheringState WebRTC_GetGatheringState()
+        public static BrowserRTCIceGatheringState WebRTC_GetGatheringState(int index)
         {
-            return (BrowserRTCIceGatheringState)WebRTC_Unsafe_GetGatheringState();
+            return (BrowserRTCIceGatheringState)WebRTC_Unsafe_GetGatheringState(index);
         }
 
         [DllImport("__Internal")]
-        public static extern int WebRTC_Unsafe_GetGatheringState();
+        public static extern int WebRTC_Unsafe_GetGatheringState(int index);
 
-        public static string WebRTC_GetConnectionState()
+        public static string WebRTC_GetConnectionState(int index)
         {
-            IntPtr ptr = WebRTC_Unsafe_GetConnectionState();
+            IntPtr ptr = WebRTC_Unsafe_GetConnectionState(index);
 
             if (ptr == IntPtr.Zero)
             {
@@ -96,9 +96,9 @@ namespace StinkySteak.WebRealtimeCommunication
             return offer;
         }
 
-        public static string WebRTC_GetOfferJson()
+        public static string WebRTC_GetOfferJson(int index)
         {
-            IntPtr ptr = WebRTC_Unsafe_GetOffer();
+            IntPtr ptr = WebRTC_Unsafe_GetOffer(index);
 
             if (ptr == IntPtr.Zero)
             {
@@ -112,9 +112,9 @@ namespace StinkySteak.WebRealtimeCommunication
             return offer;
         }
 
-        public static string WebRTC_GetAnswerJson()
+        public static string WebRTC_GetAnswerJson(int index)
         {
-            IntPtr ptr = WebRTC_Unsafe_GetAnswer();
+            IntPtr ptr = WebRTC_Unsafe_GetAnswer(index);
 
             if (ptr == IntPtr.Zero)
             {
@@ -128,9 +128,9 @@ namespace StinkySteak.WebRealtimeCommunication
             return offer;
         }
 
-        public static WebRTCSessionDescription WebRTC_GetOffer()
+        public static WebRTCSessionDescription WebRTC_GetOffer(int index)
         {
-            IntPtr ptr = WebRTC_Unsafe_GetOffer();
+            IntPtr ptr = WebRTC_Unsafe_GetOffer(index);
 
             if (ptr == IntPtr.Zero)
             {
@@ -146,9 +146,9 @@ namespace StinkySteak.WebRealtimeCommunication
             return sdp;
         }
 
-        public static WebRTCSessionDescription WebRTC_GetAnswer()
+        public static WebRTCSessionDescription WebRTC_GetAnswer(int index)
         {
-            IntPtr ptr = WebRTC_Unsafe_GetAnswer();
+            IntPtr ptr = WebRTC_Unsafe_GetAnswer(index);
 
             if (ptr == IntPtr.Zero)
             {
@@ -164,9 +164,9 @@ namespace StinkySteak.WebRealtimeCommunication
             return sdp;
         }
 
-        public static WebRTCSessionDescription WebRTC_GetLocalDescription()
+        public static WebRTCSessionDescription WebRTC_GetLocalDescription(int index)
         {
-            IntPtr ptr = WebRTC_Unsafe_GetLocalDescription();
+            IntPtr ptr = WebRTC_Unsafe_GetLocalDescription(index);
 
             if (ptr == IntPtr.Zero)
             {
@@ -181,9 +181,9 @@ namespace StinkySteak.WebRealtimeCommunication
             return sdp;
         }
 
-        public static string WebRTC_GetRemoteDescriptionJson()
+        public static string WebRTC_GetRemoteDescriptionJson(int index)
         {
-            IntPtr ptr = WebRTC_Unsafe_GetRemoteDescription();
+            IntPtr ptr = WebRTC_Unsafe_GetRemoteDescription(index);
 
             if (ptr == IntPtr.Zero)
             {
@@ -195,9 +195,9 @@ namespace StinkySteak.WebRealtimeCommunication
             return sdpJson;
         }
 
-        public static WebRTCSessionDescription WebRTC_GetRemoteDescription()
+        public static WebRTCSessionDescription WebRTC_GetRemoteDescription(int index)
         {
-            IntPtr ptr = WebRTC_Unsafe_GetRemoteDescription();
+            IntPtr ptr = WebRTC_Unsafe_GetRemoteDescription(index);
 
             if (ptr == IntPtr.Zero)
             {
@@ -213,93 +213,93 @@ namespace StinkySteak.WebRealtimeCommunication
         }
 
         [DllImport("__Internal")]
-        public static extern IntPtr WebRTC_Unsafe_GetOffer();
+        public static extern IntPtr WebRTC_Unsafe_GetOffer(int index);
 
         [DllImport("__Internal")]
-        public static extern IntPtr WebRTC_Unsafe_GetAnswer();
+        public static extern IntPtr WebRTC_Unsafe_GetAnswer(int index);
 
         private static readonly JsonSerializerSettings _jsonSettings = new JsonSerializerSettings
         {
             Converters = { new StringEnumConverter { NamingStrategy = new CamelCaseNamingStrategy() } }
         };
 
-        public static void WebRTC_SetLocalDescription(WebRTCSessionDescription sessionDescription)
+        public static void WebRTC_SetLocalDescription(int index, WebRTCSessionDescription sessionDescription)
         {
             string json = JsonConvert.SerializeObject(sessionDescription, _jsonSettings);
-            WebRTC_Unsafe_SetLocalDescription(json);
+            WebRTC_Unsafe_SetLocalDescription(index, json);
         }
 
-        public static void WebRTC_SetRemoteDescription(WebRTCSessionDescription sessionDescription)
+        public static void WebRTC_SetRemoteDescription(int index, WebRTCSessionDescription sessionDescription)
         {
             string json = JsonConvert.SerializeObject(sessionDescription, _jsonSettings);
-            WebRTC_Unsafe_SetRemoteDescription(json);
+            WebRTC_Unsafe_SetRemoteDescription(index, json);
         }
 
         [DllImport("__Internal")]
-        public static extern void WebRTC_Unsafe_SetLocalDescription(string sdpJson);
+        public static extern void WebRTC_Unsafe_SetLocalDescription(int index, string sdpJson);
 
         [DllImport("__Internal")]
-        public static extern void WebRTC_Unsafe_SetRemoteDescription(string sdpJson);
+        public static extern void WebRTC_Unsafe_SetRemoteDescription(int index, string sdpJson);
 
         [DllImport("__Internal")]
-        public static extern IntPtr WebRTC_Unsafe_GetLocalDescription();
+        public static extern IntPtr WebRTC_Unsafe_GetLocalDescription(int index);
 
         [DllImport("__Internal")]
-        public static extern IntPtr WebRTC_Unsafe_GetRemoteDescription();
+        public static extern IntPtr WebRTC_Unsafe_GetRemoteDescription(int index);
 
-        public static void WebRTC_CreateDataChannel(BrowserRTCDataChannelInit dataChannelConfig)
+        public static void WebRTC_CreateDataChannel(int index, BrowserRTCDataChannelInit dataChannelConfig)
         {
             string json = JsonConvert.SerializeObject(dataChannelConfig);
 
-            WebRTC_Unsafe_CreateDataChannel(json);
+            WebRTC_Unsafe_CreateDataChannel(index, json);
         }
 
         [DllImport("__Internal")]
-        public static extern void WebRTC_Unsafe_CreateDataChannel(string configJson);
+        public static extern void WebRTC_Unsafe_CreateDataChannel(int index, string configJson);
 
-        public static void WebRTC_CreateDataChannelReliable()
+        public static void WebRTC_CreateDataChannelReliable(int index)
         {
-            WebRTC_Unsafe_CreateDataChannelReliable();
+            WebRTC_Unsafe_CreateDataChannelReliable(index);
         }
 
         [DllImport("__Internal")]
-        public static extern void WebRTC_Unsafe_CreateDataChannelReliable();
+        public static extern void WebRTC_Unsafe_CreateDataChannelReliable(int index);
 
         [DllImport("__Internal")]
-        public static extern bool WebRTC_IsConnectionOpen();
+        public static extern bool WebRTC_IsConnectionOpen(int index);
 
         [DllImport("__Internal")]
-        public static extern void WebRTC_DataChannelSend(IntPtr ptr, int length);
+        public static extern void WebRTC_DataChannelSend(int index, IntPtr ptr, int length);
 
         [DllImport("__Internal")]
-        public static extern void WebRTC_DataChannelReliableSend(IntPtr ptr, int length);
+        public static extern void WebRTC_DataChannelReliableSend(int index, IntPtr ptr, int length);
 
         [DllImport("__Internal")]
-        public static extern void WebRTC_SetCallbackOnMessage(OnMessageCallback callback);
+        public static extern void WebRTC_SetCallbackOnMessage(int index, OnMessageCallback callback);
 
         [DllImport("__Internal")]
-        public static extern void WebRTC_SetCallbackOnIceConnectionStateChange(OnIceConnectionStateChange callback);
+        public static extern void WebRTC_SetCallbackOnIceConnectionStateChange(int index, OnIceConnectionStateChange callback);
 
         [DllImport("__Internal")]
-        public static extern void WebRTC_SetCallbackOnDataChannelCreated(OnDataChannelCreated calback);
+        public static extern void WebRTC_SetCallbackOnDataChannelCreated(int index, OnDataChannelCreated calback);
 
         [DllImport("__Internal")]
-        public static extern void WebRTC_SetCallbackOnIceCandidate(OnIceCandidate calback);
+        public static extern void WebRTC_SetCallbackOnIceCandidate(int index, OnIceCandidate calback);
 
         [DllImport("__Internal")]
-        public static extern void WebRTC_SetCallbackOnDataChannelOpen(OnDataChannelOpen calback);
+        public static extern void WebRTC_SetCallbackOnDataChannelOpen(int index, OnDataChannelOpen calback);
 
         [DllImport("__Internal")]
-        public static extern void WebRTC_SetCallbackOnDataChannelReliableOpen(OnDataChannelOpen calback);
+        public static extern void WebRTC_SetCallbackOnDataChannelReliableOpen(int index, OnDataChannelOpen calback);
 
         [DllImport("__Internal")]
-        public static extern void WebRTC_SetCallbackOnIceCandidateGatheringState(OnIceCandidateGatheringState calback);
+        public static extern void WebRTC_SetCallbackOnIceCandidateGatheringState(int index, OnIceCandidateGatheringState calback);
 
         [DllImport("__Internal")]
-        public static extern bool WebRTC_GetIsPeerConnectionCreated();
+        public static extern bool WebRTC_GetIsPeerConnectionCreated(int index);
 
         [DllImport("__Internal")]
-        public static extern bool WebRTC_Reset();
+        public static extern bool WebRTC_Reset(int index);
 #else
         public static void WebRTC_Unsafe_CreateRTCPeerConnection(string configJson) { }
 
@@ -389,13 +389,13 @@ namespace StinkySteak.WebRealtimeCommunication
 #endif
     }
 
-    public delegate void OnMessageCallback(IntPtr ptr, int length);
-    public delegate void OnIceConnectionStateChange();
-    public delegate void OnDataChannelCreated();
-    public delegate void OnIceCandidate();
-    public delegate void OnDataChannelOpen();
-    public delegate void OnDataChannelReliableOpen();
-    public delegate void OnIceCandidateGatheringState(int state);
+    public delegate void OnMessageCallback(int index, IntPtr ptr, int length);
+    public delegate void OnIceConnectionStateChange(int index);
+    public delegate void OnDataChannelCreated(int index);
+    public delegate void OnIceCandidate(int index);
+    public delegate void OnDataChannelOpen(int index);
+    public delegate void OnDataChannelReliableOpen(int index);
+    public delegate void OnIceCandidateGatheringState(int index, int state);
 
     public enum BrowserRTCIceGatheringState : int
     {
